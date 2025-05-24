@@ -135,3 +135,149 @@ Compare revenue between two different date ranges.
 **Example:**
 
 - `GET /api/sales/compare?start1=2024-01-01&end1=2024-01-31&start2=2023-01-01&end2=2023-01-31`
+
+## Database Documentation
+
+This project uses **MongoDB** as the primary database. The main collections are `products`, `inventory`, and `sales`.
+
+---
+
+### Collections & Schemas
+
+#### 1. Product (`products`)
+
+| Field       | Type     | Description                                 |
+| ----------- | -------- | ------------------------------------------- |
+| `_id`       | ObjectId | Unique identifier (MongoDB-generated)       |
+| `name`      | String   | Name of the product                         |
+| `category`  | String   | Product category (e.g., Electronics, Books) |
+| `brand`     | String   | Brand name                                  |
+| `sku`       | String   | Stock Keeping Unit (unique code)            |
+| `createdAt` | Date     | Timestamp (auto-generated)                  |
+| `updatedAt` | Date     | Timestamp (auto-generated)                  |
+
+**Purpose:**  
+Stores master data for every product that can be tracked for inventory and sales.
+
+---
+
+#### 2. Inventory (`inventories`)
+
+| Field           | Type     | Description                                |
+| --------------- | -------- | ------------------------------------------ |
+| `_id`           | ObjectId | Unique identifier (MongoDB-generated)      |
+| `product`       | ObjectId | Reference to a Product (`products._id`)    |
+| `stock`         | Number   | Current stock level for this product       |
+| `lowStockAlert` | Number   | Threshold for low stock alert (default: 5) |
+| `createdAt`     | Date     | Timestamp (auto-generated)                 |
+| `updatedAt`     | Date     | Timestamp (auto-generated)                 |
+
+**Purpose:**  
+Tracks the real-time inventory for each product, including low stock alerts.
+
+**Relationships:**
+
+- `product` is a foreign key referencing `products._id`.
+
+---
+
+#### 3. Sale (`sales`)
+
+| Field      | Type     | Description                                        |
+| ---------- | -------- | -------------------------------------------------- |
+| `_id`      | ObjectId | Unique identifier (MongoDB-generated)              |
+| `product`  | ObjectId | Reference to a Product (`products._id`)            |
+| `quantity` | Number   | Number of units sold                               |
+| `revenue`  | Number   | Revenue generated from this sale                   |
+| `soldAt`   | Date     | Date and time of sale (default: current date/time) |
+| `channel`  | String   | Sales channel (`Amazon` or `Walmart`)              |
+
+**Purpose:**  
+Records every sale transaction, including product sold, quantity, revenue, date, and sales channel.
+
+**Relationships:**
+
+- `product` is a foreign key referencing `products._id`.
+
+---
+
+### Relationships Overview
+
+- **Product** is the core entity; both **Inventory** and **Sale** reference Product by ObjectId.
+- There is **no redundant data**: all product-related details are stored only in the `products` collection.
+- This structure is **normalized**: data is consistent and easy to maintain.
+
+[products] ←── [inventories]
+↑
+└───── [sales]
+
+- **products**: Master data for each item.
+- **inventories**: Tracks stock levels for each product.
+- **sales**: Records each product sale event.
+
+---
+
+### Indexing
+
+- `products.category`: Indexed for fast filtering.
+- `inventory.product`: Indexed for quick product lookups.
+- `sales.product`: Indexed for product-based aggregations.
+- `sales.soldAt`: Indexed for efficient date range queries.
+- `sales`: Compound index on `{ soldAt, product }` for reporting.
+
+---
+
+### Example: Inventory Document
+
+```json
+{
+  "_id": "664b12232ab3c12c34ab5678",
+  "product": "664b121f2ab3c12c34ab5677",
+  "stock": 12,
+  "lowStockAlert": 5,
+  "createdAt": "2024-05-24T08:30:12.135Z",
+  "updatedAt": "2024-05-24T08:30:12.135Z"
+}
+```
+
+- **products**: Master data for each item.
+- **inventories**: Tracks stock levels for each product.
+- **sales**: Records each product sale event.
+
+---
+
+### Indexing
+
+- `products.category`: Indexed for fast filtering.
+- `inventory.product`: Indexed for quick product lookups.
+- `sales.product`: Indexed for product-based aggregations.
+- `sales.soldAt`: Indexed for efficient date range queries.
+- `sales`: Compound index on `{ soldAt, product }` for reporting.
+
+---
+
+### Example: Inventory Document
+
+```json
+{
+  "_id": "664b12232ab3c12c34ab5678",
+  "product": "664b121f2ab3c12c34ab5677",
+  "stock": 12,
+  "lowStockAlert": 5,
+  "createdAt": "2024-05-24T08:30:12.135Z",
+  "updatedAt": "2024-05-24T08:30:12.135Z"
+}
+```
+
+### Example: Sale Document
+
+```json
+{
+  "_id": "664b123a2ab3c12c34ab5679",
+  "product": "664b121f2ab3c12c34ab5677",
+  "quantity": 2,
+  "revenue": 55.98,
+  "soldAt": "2024-05-23T13:10:42.531Z",
+  "channel": "Amazon"
+}
+```
