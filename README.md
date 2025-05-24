@@ -78,6 +78,18 @@ Built with **Node.js**, **Express.js**, and **MongoDB**.
 - `GET /api/products`  
   _List all products._
 
+- `POST /api/products`
+  _Register (create) a new product._
+  **Request body:**
+  ```json
+  {
+    "name": "Product Name",
+    "category": "Category",
+    "brand": "Brand Name",
+    "sku": "UNIQUE-SKU-123"
+  }
+  ```
+
 ### Inventory
 
 - `GET /api/inventory`  
